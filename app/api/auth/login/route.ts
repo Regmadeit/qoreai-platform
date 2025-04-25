@@ -34,7 +34,7 @@ const users = [
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password } = body
+    const { email, password, isDemo } = body
 
     // Find user
     const user = users.find((u) => u.email === email)
@@ -45,9 +45,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // In production, use bcrypt.compare
-    // const isValidPassword = await compare(password, user.password)
-    const isValidPassword = password === "password" // For development only
+    // For demo mode, skip password check
+    let isValidPassword = isDemo && email === "operator@example.com" && password === "password"
+    
+    // If not demo mode, check password
+    if (!isDemo) {
+      // In production, use bcrypt.compare
+      // isValidPassword = await compare(password, user.password)
+      isValidPassword = password === "password" // For development only
+    }
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -63,6 +69,7 @@ export async function POST(request: Request) {
         email: user.email,
         role: user.role,
         name: user.name,
+        isDemo: !!isDemo
       },
       JWT_SECRET,
       { expiresIn: "1d" }
@@ -75,6 +82,7 @@ export async function POST(request: Request) {
         email: user.email,
         role: user.role,
         name: user.name,
+        isDemo: !!isDemo
       },
       redirectTo: `/${user.role}/dashboard`,
     })

@@ -4,12 +4,12 @@ import OpenAI from 'openai'
 const apiKey = process.env.OPENAI_API_KEY || ''
 const projectId = apiKey.startsWith('sk-proj-') ? apiKey.split('-')[2] : ''
 
-// Initialize OpenAI client
+// Initialize OpenAI client with QoreAI configuration
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+  baseURL: process.env.OPENAI_API_BASE_URL || 'https://api.qoreai.com/v1',
   defaultHeaders: {
-    'OpenAI-Project': projectId
+    'X-Project-ID': projectId
   }
 })
 
@@ -37,26 +37,31 @@ export class AIService {
   }
 
   public async processMessage(message: string, userId: string): Promise<AIResponse> {
-    const context = this.getUserContext(userId)
-    const systemMessage = this.prepareSystemMessage(context)
+    try {
+      const context = this.getUserContext(userId)
+      const systemMessage = this.prepareSystemMessage(context)
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemMessage },
-        { role: 'user', content: message }
-      ],
-      temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
-      max_tokens: parseInt(process.env.MAX_TOKENS || '500', 10)
-    })
+      const completion = await openai.chat.completions.create({
+        model: process.env.AI_MODEL || 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: message }
+        ],
+        temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
+        max_tokens: parseInt(process.env.MAX_TOKENS || '500', 10)
+      })
 
-    const response = completion.choices[0].message.content || ''
-    this.updateContext(userId, message, response)
+      const response = completion.choices[0].message.content || ''
+      this.updateContext(userId, message, response)
 
-    return {
-      content: response,
-      recommendations: this.generateRecommendations(response),
-      metrics: this.generateMetrics(response)
+      return {
+        content: response,
+        recommendations: this.generateRecommendations(response),
+        metrics: this.generateMetrics(response)
+      }
+    } catch (error) {
+      console.error('AI Service Error:', error)
+      throw new Error(error instanceof Error ? error.message : 'Unknown error in AI service')
     }
   }
 

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Lock } from "lucide-react"
+import { AlertCircle, Lock, PlayCircle } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -36,10 +36,46 @@ export default function LoginPage() {
         throw new Error(data.error || "Invalid credentials")
       }
 
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user))
+
       // Redirect based on user role
       router.push(data.redirectTo || "/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDemoLogin = async () => {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "operator@example.com",
+          password: "password",
+          isDemo: true
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Demo login failed")
+      }
+
+      // Store demo user data in localStorage
+      localStorage.setItem('user', JSON.stringify({ ...data.user, isDemo: true }))
+
+      // Redirect to operator dashboard
+      router.push("/operator/dashboard")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Demo login failed")
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +93,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold text-white">Welcome to QoreAI</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Enter your credentials to access your account
+            Enter your credentials or try demo mode
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -101,6 +137,15 @@ export default function LoginPage() {
             >
               <Lock className="mr-2 h-4 w-4" />
               {isLoading ? "Signing in..." : "Sign in"}
+            </Button>
+            <Button 
+              type="button"
+              className="w-full bg-qore-gold hover:bg-qore-gold/90 text-white"
+              onClick={handleDemoLogin}
+              disabled={isLoading}
+            >
+              <PlayCircle className="mr-2 h-4 w-4" />
+              Try Demo Mode
             </Button>
             <div className="text-center text-sm">
               <a href="/forgot-password" className="text-primary hover:text-primary/90 hover:underline">
