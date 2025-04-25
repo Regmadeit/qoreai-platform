@@ -1,0 +1,16 @@
+<svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main Q Circle -->
+  <circle cx="200" cy="80" r="60" fill="#0A3D62"/>
+  
+  <!-- Inner Circle (Negative Space) -->
+  <circle cx="200" cy="80" r="30" fill="white"/>
+  
+  <!-- Gold Accent -->
+  <path d="M230 110 L260 140 L230 140 L210 120 Z" fill="#FFC107"/>
+  
+  <!-- QoreAi Text -->
+  <text x="80" y="180" font-family="Montserrat, sans-serif" font-weight="700" font-size="48" fill="#0A3D62">QoreAi</text>
+  
+  <!-- Tagline -->
+  <text x="80" y="195" font-family="Roboto, sans-serif" font-weight="400" font-size="14" fill="#1B4F72">DATA | OPERATIONS | CLARITY</text>
+</svg>
