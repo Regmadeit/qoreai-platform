@@ -1,15 +1,11 @@
 import OpenAI from 'openai'
 
-// Extract project ID from API key
-const apiKey = process.env.OPENAI_API_KEY || ''
-const projectId = apiKey.startsWith('sk-proj-') ? apiKey.split('-')[2] : ''
-
-// Initialize OpenAI client with QoreAI configuration
+// Initialize OpenAI client with project configuration
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_BASE_URL || 'https://api.qoreai.com/v1',
+  baseURL: process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1',
   defaultHeaders: {
-    'X-Project-ID': projectId
+    'OpenAI-Project': process.env.OPENAI_API_KEY?.split('-')[2] || ''
   }
 })
 
@@ -48,7 +44,7 @@ export class AIService {
           { role: 'user', content: message }
         ],
         temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
-        max_tokens: parseInt(process.env.MAX_TOKENS || '500', 10)
+        max_tokens: parseInt(process.env.MAX_TOKENS || '500')
       })
 
       const response = completion.choices[0].message.content || ''
@@ -66,7 +62,14 @@ export class AIService {
   }
 
   private getUserContext(userId: string): string[] {
+    if (!this.userContext.has(userId)) {
+      this.userContext.set(userId, [])
+    }
     return this.userContext.get(userId) || []
+  }
+
+  private prepareSystemMessage(context: string[]): string {
+    return `You are QoreAI, an AI assistant for the QoreAI manufacturing operations platform. You help users with equipment monitoring, maintenance, logistics, and operational tasks. Previous conversation context:\n${context.join('\n')}`
   }
 
   private updateContext(userId: string, message: string, response: string) {
@@ -82,17 +85,18 @@ export class AIService {
     this.userContext.set(userId, context)
   }
 
-  private prepareSystemMessage(context: string[]): string {
-    return `You are an AI assistant helping with equipment maintenance and operations. Previous conversation:\n${context.join('\n')}`
-  }
-
   private generateRecommendations(response: string): string[] {
-    // Example recommendations based on response
-    return [
-      'Check equipment status regularly',
-      'Document any unusual observations',
-      'Follow safety protocols'
-    ]
+    // Extract action items or recommendations from the response
+    const recommendations: string[] = []
+    const lines = response.split('\n')
+    
+    for (const line of lines) {
+      if (line.includes('recommend') || line.includes('suggest') || line.includes('should')) {
+        recommendations.push(line.trim())
+      }
+    }
+    
+    return recommendations
   }
 
   private generateMetrics(response: string): { [key: string]: number | string } {

@@ -27,7 +27,10 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          isDemo: false
+        }),
       })
 
       const data = await response.json()
@@ -40,7 +43,7 @@ export default function LoginPage() {
       localStorage.setItem('user', JSON.stringify(data.user))
 
       // Redirect based on user role
-      router.push(data.redirectTo || "/dashboard")
+      window.location.href = data.redirectTo
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -57,8 +60,6 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: "operator@example.com",
-          password: "password",
           isDemo: true
         }),
       })
@@ -70,10 +71,10 @@ export default function LoginPage() {
       }
 
       // Store demo user data in localStorage
-      localStorage.setItem('user', JSON.stringify({ ...data.user, isDemo: true }))
+      localStorage.setItem('user', JSON.stringify(data.user))
 
       // Redirect to operator dashboard
-      router.push("/operator/dashboard")
+      window.location.href = data.redirectTo
     } catch (err) {
       setError(err instanceof Error ? err.message : "Demo login failed")
     } finally {

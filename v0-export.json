@@ -1,0 +1,95 @@
+{
+  "name": "QoreAI Platform",
+  "description": "Next-generation AI-powered manufacturing operations platform",
+  "framework": "next",
+  "dependencies": {
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "openai": "^4.28.0",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-toast": "^1.1.5",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "lucide-react": "^0.330.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0"
+  },
+  "env": {
+    "OPENAI_API_KEY": "sk-proj-your-key-here",
+    "OPENAI_API_BASE_URL": "https://api.openai.com/v1",
+    "AI_MODEL": "gpt-3.5-turbo",
+    "MAX_TOKENS": "1000",
+    "TEMPERATURE": "0.7",
+    "NEXT_PUBLIC_APP_URL": "http://localhost:3000"
+  },
+  "pages": {
+    "/": {
+      "title": "Dashboard",
+      "description": "Main dashboard with key metrics and controls"
+    },
+    "/login": {
+      "title": "Login",
+      "description": "User authentication page"
+    },
+    "/operator/dashboard": {
+      "title": "Operator Dashboard",
+      "description": "Operator-specific view with equipment status and tasks"
+    },
+    "/operator/inspections": {
+      "title": "Equipment Inspections",
+      "description": "Daily equipment inspection checklists"
+    },
+    "/operator/maintenance": {
+      "title": "Maintenance Requests",
+      "description": "Submit and track maintenance requests"
+    }
+  },
+  "components": {
+    "ui": {
+      "button": true,
+      "card": true,
+      "dialog": true,
+      "input": true,
+      "label": true,
+      "tabs": true,
+      "toast": true
+    },
+    "layout": {
+      "header": true,
+      "sidebar": true,
+      "footer": true
+    },
+    "features": {
+      "auth": true,
+      "ai-assistant": true,
+      "equipment-monitoring": true,
+      "maintenance-tracking": true,
+      "task-management": true
+    }
+  },
+  "theme": {
+    "colors": {
+      "qore": {
+        "blue": "#0066FF",
+        "gray": "#1F2937",
+        "gold": "#FFD700"
+      }
+    },
+    "extend": {
+      "fontFamily": {
+        "sans": ["Inter", "sans-serif"]
+      }
+    }
+  }
+} 

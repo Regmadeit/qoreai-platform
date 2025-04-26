@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { sign } from "jsonwebtoken"
-import { hash, compare } from "bcrypt"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
 
@@ -10,22 +8,21 @@ const users = [
   {
     id: 1,
     email: "operator@example.com",
-    // In production, these would be hashed passwords
-    password: "$2b$10$8nMJx.p8E6HJ5EtfZvP1S.n.PCUxSLr5QEbMY9qY5nP5jU5Kl5jK2", // "password"
+    password: "password123", // For demo purposes
     role: "operator",
     name: "John Operator",
   },
   {
     id: 2,
     email: "maintenance@example.com",
-    password: "$2b$10$8nMJx.p8E6HJ5EtfZvP1S.n.PCUxSLr5QEbMY9qY5nP5jU5Kl5jK2", // "password"
+    password: "password123",
     role: "maintenance",
     name: "Mike Maintenance",
   },
   {
     id: 3,
     email: "admin@example.com",
-    password: "$2b$10$8nMJx.p8E6HJ5EtfZvP1S.n.PCUxSLr5QEbMY9qY5nP5jU5Kl5jK2", // "password"
+    password: "password123",
     role: "admin",
     name: "Admin User",
   },
@@ -33,70 +30,96 @@ const users = [
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    // Check if request is empty
+    const contentType = request.headers.get("content-type")
+    if (!contentType || !contentType.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Content-Type must be application/json" },
+        { status: 400 }
+      )
+    }
+
+    const text = await request.text()
+    if (!text) {
+      return NextResponse.json(
+        { error: "Request body is empty" },
+        { status: 400 }
+      )
+    }
+
+    let body
+    try {
+      body = JSON.parse(text)
+    } catch (e) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      )
+    }
+
     const { email, password, isDemo } = body
 
-    // Find user
+    // For demo mode, use operator account
+    if (isDemo) {
+      const demoUser = users[0] // operator account
+      const token = sign(
+        {
+          id: demoUser.id,
+          email: demoUser.email,
+          role: demoUser.role,
+          name: demoUser.name,
+          isDemo: true
+        },
+        JWT_SECRET,
+        { expiresIn: "1d" }
+      )
+
+      return NextResponse.json({
+        token,
+        user: {
+          id: demoUser.id,
+          email: demoUser.email,
+          role: demoUser.role,
+          name: demoUser.name,
+          isDemo: true
+        },
+        redirectTo: `/operator/dashboard`,
+      })
+    }
+
+    // Regular login
     const user = users.find((u) => u.email === email)
-    if (!user) {
+    if (!user || user.password !== password) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       )
     }
 
-    // For demo mode, skip password check
-    let isValidPassword = isDemo && email === "operator@example.com" && password === "password"
-    
-    // If not demo mode, check password
-    if (!isDemo) {
-      // In production, use bcrypt.compare
-      // isValidPassword = await compare(password, user.password)
-      isValidPassword = password === "password" // For development only
-    }
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      )
-    }
-
-    // Create token with role information
     const token = sign(
       {
         id: user.id,
         email: user.email,
         role: user.role,
         name: user.name,
-        isDemo: !!isDemo
+        isDemo: false
       },
       JWT_SECRET,
       { expiresIn: "1d" }
     )
 
-    // Create the response
-    const response = NextResponse.json({
+    return NextResponse.json({
+      token,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
         name: user.name,
-        isDemo: !!isDemo
+        isDemo: false
       },
       redirectTo: `/${user.role}/dashboard`,
     })
 
-    // Set HTTP-only cookie in the response
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 86400, // 1 day
-      path: "/",
-    })
-
-    return response
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json(
