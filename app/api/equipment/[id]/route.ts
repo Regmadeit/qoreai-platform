@@ -1,62 +1,96 @@
 import { NextResponse } from "next/server"
-import type { Equipment } from "@/types"
 
-// Mock data - in a real app, this would come from a database
-const equipmentData: Record<string, Equipment> = {
-  "eq-001": {
-    id: "eq-001",
-    name: "Conveyor Belt A1",
-    type: "Conveyor",
+interface Equipment {
+  id: string
+  name: string
+  type: string
+  status: "operational" | "maintenance" | "offline"
+  location: string
+  lastMaintenance: string
+  nextMaintenance: string
+  specifications: Record<string, string>
+  maintenanceHistory: Array<{
+    date: string
+    type: string
+    description: string
+    technician: string
+    status: "completed" | "scheduled" | "in-progress"
+  }>
+}
+
+// Mock data
+const equipment: Record<string, Equipment> = {
+  "pump-01": {
+    id: "pump-01",
+    name: "Industrial Pump A1",
+    type: "Centrifugal Pump",
     status: "operational",
-    location: "Building 1, Section A",
-    lastMaintenance: "2023-10-15",
-    nextMaintenance: "2023-11-15",
-    installationDate: "2020-05-10",
-    manufacturer: "ConveyTech Industries",
-    model: "CT-5000",
-    serialNumber: "CTI-5000-12345",
+    location: "Building A - Floor 1",
+    lastMaintenance: "2024-04-15",
+    nextMaintenance: "2024-05-15",
     specifications: {
-      powerRequirements: "220V, 3-phase",
-      dimensions: "50ft x 3ft x 4ft",
-      weight: "2000 lbs",
-      capacity: "500 items/hour",
+      "Flow Rate": "500 GPM",
+      "Head": "100 ft",
+      "Motor Power": "50 HP",
+      "RPM": "3600",
+      "Voltage": "460V",
+      "Phase": "3-Phase",
     },
-    healthScore: 92,
-    maintenanceHistory: [],
-    documents: [],
-    parts: [],
-    sensors: [
-      { id: "s-001", name: "Temperature Sensor", status: "normal", value: "72°F" },
-      { id: "s-002", name: "Vibration Sensor", status: "warning", value: "15mm/s" },
-      { id: "s-003", name: "Speed Sensor", status: "normal", value: "120ft/min" },
+    maintenanceHistory: [
+      {
+        date: "2024-04-15",
+        type: "Preventive Maintenance",
+        description: "Regular inspection and bearing lubrication",
+        technician: "John Smith",
+        status: "completed",
+      },
+      {
+        date: "2024-03-01",
+        type: "Repair",
+        description: "Replaced mechanical seal",
+        technician: "Mike Johnson",
+        status: "completed",
+      },
+      {
+        date: "2024-05-15",
+        type: "Scheduled Maintenance",
+        description: "Full system inspection and oil change",
+        technician: "Sarah Wilson",
+        status: "scheduled",
+      },
     ],
   },
-  "eq-002": {
-    id: "eq-002",
-    name: "Hydraulic Press B2",
-    type: "Press",
+  "motor-01": {
+    id: "motor-01",
+    name: "Electric Motor B2",
+    type: "AC Induction Motor",
     status: "maintenance",
-    location: "Building 2, Section B",
-    lastMaintenance: "2023-09-20",
-    nextMaintenance: "2023-10-20",
-    installationDate: "2019-08-15",
-    manufacturer: "HydroPress Systems",
-    model: "HP-8000",
-    serialNumber: "HPS-8000-67890",
+    location: "Building B - Floor 2",
+    lastMaintenance: "2024-04-01",
+    nextMaintenance: "2024-05-01",
     specifications: {
-      powerRequirements: "440V, 3-phase",
-      dimensions: "10ft x 8ft x 12ft",
-      weight: "8000 lbs",
-      capacity: "200 tons",
+      "Power": "75 HP",
+      "Speed": "1800 RPM",
+      "Voltage": "460V",
+      "Current": "80A",
+      "Frame": "365T",
+      "Efficiency": "95%",
     },
-    healthScore: 68,
-    maintenanceHistory: [],
-    documents: [],
-    parts: [],
-    sensors: [
-      { id: "s-004", name: "Pressure Sensor", status: "critical", value: "2800 PSI" },
-      { id: "s-005", name: "Oil Temperature", status: "normal", value: "140°F" },
-      { id: "s-006", name: "Position Sensor", status: "normal", value: "0.5mm" },
+    maintenanceHistory: [
+      {
+        date: "2024-04-01",
+        type: "Emergency Repair",
+        description: "Bearing replacement",
+        technician: "Mike Johnson",
+        status: "completed",
+      },
+      {
+        date: "2024-04-25",
+        type: "Inspection",
+        description: "Vibration analysis and alignment check",
+        technician: "Sarah Wilson",
+        status: "in-progress",
+      },
     ],
   },
 }
@@ -74,15 +108,43 @@ export function generateStaticParams() {
   ]
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const equipmentItem = equipment[params.id]
 
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  if (!equipmentData[id]) {
-    return NextResponse.json({ error: "Equipment not found" }, { status: 404 })
+  if (!equipmentItem) {
+    return NextResponse.json(
+      { error: "Equipment not found" },
+      { status: 404 }
+    )
   }
 
-  return NextResponse.json(equipmentData[id])
+  return NextResponse.json(equipmentItem)
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const data = await request.json()
+    const equipmentItem = equipment[params.id]
+
+    if (!equipmentItem) {
+      return NextResponse.json(
+        { error: "Equipment not found" },
+        { status: 404 }
+      )
+    }
+
+    equipment[params.id] = { ...equipmentItem, ...data }
+    return NextResponse.json(equipment[params.id])
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update equipment" },
+      { status: 500 }
+    )
+  }
 }

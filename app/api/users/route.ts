@@ -1,75 +1,101 @@
 import { NextResponse } from "next/server"
-import type { User } from "@/types"
 
-// Mock data - in a real app, this would come from a database
-const users: User[] = [
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  avatar: string;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin: string;
+  status: string;
+}
+
+const mockUsers: User[] = [
   {
-    id: "user-001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "manager",
+    id: "1",
+    name: "John Smith",
+    email: "john@qoreai.com",
+    role: "operator",
     department: "Operations",
     avatar: "/placeholder.svg?key=tpv3m",
     createdAt: "2022-01-15T08:00:00Z",
-    updatedAt: "2023-09-20T14:30:00Z",
+    updatedAt: "2023-09-20T14:30:00Z", 
     lastLogin: "2023-10-19T08:45:00Z",
-    status: "active",
+    status: "active"
   },
   {
-    id: "user-002",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "maintenance",
-    department: "Maintenance",
-    avatar: "/placeholder.svg?key=2r454",
-    createdAt: "2022-02-10T09:15:00Z",
-    updatedAt: "2023-08-15T11:20:00Z",
-    lastLogin: "2023-10-19T07:30:00Z",
-    status: "active",
-  },
-  {
-    id: "user-003",
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    role: "maintenance",
-    department: "Maintenance",
-    avatar: "/placeholder.svg?key=nffpk",
-    createdAt: "2022-03-05T10:30:00Z",
-    updatedAt: "2023-07-22T16:45:00Z",
-    lastLogin: "2023-10-18T16:20:00Z",
-    status: "active",
-  },
-  {
-    id: "user-004",
-    name: "Sarah Williams",
-    email: "sarah.williams@example.com",
-    role: "operator",
-    department: "Production",
-    avatar: "/placeholder.svg?key=70pgu",
-    createdAt: "2022-04-20T11:45:00Z",
-    updatedAt: "2023-09-10T09:30:00Z",
-    lastLogin: "2023-10-19T06:15:00Z",
-    status: "active",
-  },
-  {
-    id: "user-005",
-    name: "David Brown",
-    email: "david.brown@example.com",
-    role: "supervisor",
-    department: "Production",
-    avatar: "/placeholder.svg?key=57yps",
-    createdAt: "2022-05-15T13:00:00Z",
-    updatedAt: "2023-08-28T14:15:00Z",
-    lastLogin: "2023-10-18T15:40:00Z",
-    status: "active",
-  },
-]
+    id: "2", 
+    name: "Sarah Johnson",
+    email: "sarah@qoreai.com",
+    role: "manager",
+    department: "Operations",
+    avatar: "/placeholder.svg?key=abc123",
+    createdAt: "2022-03-01T09:00:00Z",
+    updatedAt: "2023-10-01T11:20:00Z",
+    lastLogin: "2023-10-20T09:15:00Z", 
+    status: "active"
+  }
+];
 
 export const dynamic = 'force-static'
 
 export async function GET() {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  return NextResponse.json(mockUsers);
+}
 
-  return NextResponse.json(users)
+export async function POST(request: Request) {
+  try {
+    const newUser = await request.json();
+    return NextResponse.json(newUser, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 400 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const updatedUser = await request.json();
+    const user = mockUsers.find(u => u.id === updatedUser.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update user" },
+      { status: 400 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { id } = await request.json();
+    const user = mockUsers.find(u => u.id === id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: "User deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete user" },
+      { status: 400 }
+    );
+  }
 }

@@ -1,12 +1,19 @@
 import OpenAI from 'openai'
 
-// Initialize OpenAI client with project configuration
+function validateApiKey(apiKey: string | undefined): string {
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured')
+  }
+  if (!apiKey.startsWith('sk-') && !apiKey.startsWith('sk-proj-')) {
+    throw new Error('API key must start with sk- or sk-proj-')
+  }
+  return apiKey
+}
+
+// Initialize OpenAI client with simplified configuration
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1',
-  defaultHeaders: {
-    'OpenAI-Project': process.env.OPENAI_API_KEY?.split('-')[2] || ''
-  }
+  baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'
 })
 
 export interface AIResponse {
@@ -38,13 +45,13 @@ export class AIService {
       const systemMessage = this.prepareSystemMessage(context)
 
       const completion = await openai.chat.completions.create({
-        model: process.env.AI_MODEL || 'gpt-3.5-turbo',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: message }
         ],
-        temperature: parseFloat(process.env.TEMPERATURE || '0.7'),
-        max_tokens: parseInt(process.env.MAX_TOKENS || '500')
+        temperature: 0.7,
+        max_tokens: 500
       })
 
       const response = completion.choices[0].message.content || ''

@@ -1,19 +1,29 @@
 import { NextResponse } from "next/server"
-import type { Checklist } from "@/types"
 
-// Mock data - in a real app, this would come from a database
+interface ChecklistItem {
+  id: string
+  description: string
+  required: boolean
+  completed: boolean
+}
+
+interface Checklist {
+  id: string
+  title: string
+  type: string
+  items: ChecklistItem[]
+  createdAt: string
+  dueDate: string
+  assignedTo: string
+  status: "pending" | "in-progress" | "completed"
+}
+
+// Mock data
 const checklists: Checklist[] = [
   {
-    id: "cl-001",
-    title: "Daily Conveyor Inspection",
-    description: "Standard daily inspection for conveyor systems",
-    equipmentId: "eq-001",
-    equipmentName: "Conveyor Belt A1",
-    createdBy: "user-001",
-    createdByName: "John Doe",
-    createdAt: "2023-10-01T08:00:00Z",
-    updatedAt: "2023-10-15T09:30:00Z",
-    frequency: "daily",
+    id: "checklist-001",
+    title: "Daily Equipment Inspection",
+    type: "equipment",
     items: [
       {
         id: "item-001",
@@ -23,97 +33,126 @@ const checklists: Checklist[] = [
       },
       {
         id: "item-002",
-        description: "Inspect drive motor",
+        description: "Inspect for wear and damage",
         required: true,
         completed: false,
       },
       {
         id: "item-003",
-        description: "Check alignment",
+        description: "Test emergency stops",
         required: true,
         completed: false,
       },
       {
         id: "item-004",
-        description: "Lubricate bearings",
-        required: false,
+        description: "Check oil levels",
+        required: true,
         completed: false,
       },
     ],
-    status: "active",
-    assignedTo: "user-004",
-    assignedToName: "Sarah Williams",
-    dueDate: "2023-10-20T17:00:00Z",
-    completedDate: null,
+    createdAt: "2024-04-25",
+    dueDate: "2024-04-26",
+    assignedTo: "John Smith",
+    status: "pending",
   },
   {
-    id: "cl-002",
-    title: "Weekly Hydraulic Press Inspection",
-    description: "Standard weekly inspection for hydraulic press systems",
-    equipmentId: "eq-002",
-    equipmentName: "Hydraulic Press B2",
-    createdBy: "user-001",
-    createdByName: "John Doe",
-    createdAt: "2023-10-05T10:15:00Z",
-    updatedAt: "2023-10-12T14:20:00Z",
-    frequency: "weekly",
+    id: "checklist-002",
+    title: "Weekly Safety Inspection",
+    type: "safety",
     items: [
       {
-        id: "item-005",
-        description: "Check hydraulic fluid level",
-        required: true,
-        completed: true,
-      },
-      {
-        id: "item-006",
-        description: "Inspect hoses for leaks",
-        required: true,
-        completed: true,
-      },
-      {
-        id: "item-007",
-        description: "Test pressure relief valve",
+        id: "item-001",
+        description: "Check fire extinguishers",
         required: true,
         completed: false,
       },
       {
-        id: "item-008",
-        description: "Check electrical connections",
+        id: "item-002",
+        description: "Inspect emergency exits",
+        required: true,
+        completed: false,
+      },
+      {
+        id: "item-003",
+        description: "Test emergency lighting",
+        required: true,
+        completed: false,
+      },
+      {
+        id: "item-004",
+        description: "Check first aid supplies",
         required: true,
         completed: false,
       },
     ],
-    status: "in-progress",
-    assignedTo: "user-003",
-    assignedToName: "Mike Johnson",
-    dueDate: "2023-10-19T17:00:00Z",
-    completedDate: null,
+    createdAt: "2024-04-25",
+    dueDate: "2024-05-02",
+    assignedTo: "Sarah Wilson",
+    status: "pending",
   },
 ]
 
 export const dynamic = 'force-static'
 
 export async function GET() {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
   return NextResponse.json(checklists)
 }
 
-export async function POST(request: Request) {
-  const newChecklist = await request.json()
-
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // In a real app, you would validate and save to a database
-  const createdChecklist: Checklist = {
-    ...newChecklist,
-    id: `cl-${Math.floor(Math.random() * 1000)}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: "active",
+export async function POST(req: Request) {
+  try {
+    const data = await req.json()
+    const newChecklist: Checklist = {
+      id: `checklist-${Date.now()}`,
+      ...data,
+      createdAt: new Date().toISOString().split("T")[0],
+      status: "pending",
+    }
+    checklists.push(newChecklist)
+    return NextResponse.json(newChecklist)
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create checklist" },
+      { status: 500 }
+    )
   }
+}
 
-  return NextResponse.json(createdChecklist, { status: 201 })
+export async function PUT(req: Request) {
+  try {
+    const data = await req.json()
+    const index = checklists.findIndex((c) => c.id === data.id)
+    if (index === -1) {
+      return NextResponse.json(
+        { error: "Checklist not found" },
+        { status: 404 }
+      )
+    }
+    checklists[index] = { ...checklists[index], ...data }
+    return NextResponse.json(checklists[index])
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update checklist" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json()
+    const index = checklists.findIndex((c) => c.id === id)
+    if (index === -1) {
+      return NextResponse.json(
+        { error: "Checklist not found" },
+        { status: 404 }
+      )
+    }
+    checklists.splice(index, 1)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete checklist" },
+      { status: 500 }
+    )
+  }
 }

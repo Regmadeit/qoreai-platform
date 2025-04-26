@@ -1,87 +1,116 @@
 import { NextResponse } from "next/server"
-import type { Notification } from "@/types"
 
-// Mock data - in a real app, this would come from a database
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: "info" | "success" | "warning" | "error"
+  status: "read" | "unread"
+  createdAt: string
+  userId: string
+}
+
+// Mock data
 const notifications: Notification[] = [
   {
     id: "notif-001",
-    title: "Work Order Assigned",
-    message: "You have been assigned a new work order: Repair Conveyor Belt A1",
-    type: "work-order",
+    title: "Equipment Maintenance Due",
+    message: "Scheduled maintenance for Pump A1 is due tomorrow",
+    type: "warning",
     status: "unread",
-    createdAt: "2023-10-19T09:15:00Z",
-    userId: "user-002",
-    relatedItemId: "wo-001",
-    relatedItemType: "work-order",
-    priority: "high",
+    createdAt: "2024-04-25T10:00:00Z",
+    userId: "user-001",
   },
   {
     id: "notif-002",
-    title: "Checklist Due Soon",
-    message: "Weekly Hydraulic Press Inspection is due in 24 hours",
-    type: "checklist",
+    title: "Safety Inspection Complete",
+    message: "Weekly safety inspection has been completed successfully",
+    type: "success",
     status: "unread",
-    createdAt: "2023-10-18T14:30:00Z",
-    userId: "user-003",
-    relatedItemId: "cl-002",
-    relatedItemType: "checklist",
-    priority: "medium",
+    createdAt: "2024-04-25T09:30:00Z",
+    userId: "user-001",
   },
   {
     id: "notif-003",
-    title: "Equipment Alert",
-    message: "Hydraulic Press B2 pressure sensor reading is critical: 2800 PSI",
-    type: "alert",
-    status: "read",
-    createdAt: "2023-10-18T10:45:00Z",
+    title: "Low Inventory Alert",
+    message: "Raw material inventory is below minimum threshold",
+    type: "error",
+    status: "unread",
+    createdAt: "2024-04-25T09:00:00Z",
     userId: "user-001",
-    relatedItemId: "eq-002",
-    relatedItemType: "equipment",
-    priority: "critical",
   },
   {
     id: "notif-004",
-    title: "Maintenance Completed",
-    message: "Scheduled maintenance for Conveyor Belt A1 has been completed",
-    type: "maintenance",
+    title: "System Update",
+    message: "System maintenance scheduled for tonight at 22:00",
+    type: "info",
     status: "read",
-    createdAt: "2023-10-17T16:20:00Z",
+    createdAt: "2024-04-24T15:00:00Z",
     userId: "user-001",
-    relatedItemId: "eq-001",
-    relatedItemType: "equipment",
-    priority: "low",
-  },
-  {
-    id: "notif-005",
-    title: "Inventory Alert",
-    message: "Hydraulic Oil is running low (5 units remaining)",
-    type: "inventory",
-    status: "unread",
-    createdAt: "2023-10-19T08:30:00Z",
-    userId: "user-005",
-    relatedItemId: "part-003",
-    relatedItemType: "inventory",
-    priority: "medium",
   },
 ]
 
 export const dynamic = 'force-static'
 
 export async function GET() {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
   return NextResponse.json(notifications)
 }
 
-export async function POST(request: Request) {
-  const { notificationId } = await request.json()
+export async function POST(req: Request) {
+  try {
+    const data = await req.json()
+    const newNotification: Notification = {
+      id: `notif-${Date.now()}`,
+      ...data,
+      status: "unread",
+      createdAt: new Date().toISOString(),
+    }
+    notifications.push(newNotification)
+    return NextResponse.json(newNotification)
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create notification" },
+      { status: 500 }
+    )
+  }
+}
 
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 500))
+export async function PUT(req: Request) {
+  try {
+    const data = await req.json()
+    const index = notifications.findIndex((n) => n.id === data.id)
+    if (index === -1) {
+      return NextResponse.json(
+        { error: "Notification not found" },
+        { status: 404 }
+      )
+    }
+    notifications[index] = { ...notifications[index], ...data }
+    return NextResponse.json(notifications[index])
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update notification" },
+      { status: 500 }
+    )
+  }
+}
 
-  // In a real app, you would update the database
-  // Here we're just returning a success response
-
-  return NextResponse.json({ success: true, notificationId })
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json()
+    const index = notifications.findIndex((n) => n.id === id)
+    if (index === -1) {
+      return NextResponse.json(
+        { error: "Notification not found" },
+        { status: 404 }
+      )
+    }
+    notifications.splice(index, 1)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete notification" },
+      { status: 500 }
+    )
+  }
 }

@@ -3,38 +3,24 @@ export const runtime = 'edge'
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-// Extract project ID from API key
-const apiKey = process.env.OPENAI_API_KEY || ''
-const projectId = apiKey.split('-')[2] || ''
-
 const openai = new OpenAI({
-  apiKey: apiKey,
-  baseURL: process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-  defaultHeaders: {
-    'OpenAI-Project': projectId
-  }
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1"
 })
 
 export async function GET() {
   try {
     // Check environment
     const envCheck = {
-      hasApiKey: !!apiKey,
-      projectId: projectId,
-      baseUrl: process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-      model: process.env.AI_MODEL || "gpt-3.5-turbo",
-      maxTokens: process.env.MAX_TOKENS || "500",
-      temperature: process.env.TEMPERATURE || "0.7"
+      hasApiKey: !!process.env.OPENAI_API_KEY,
+      baseUrl: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+      model: "gpt-3.5-turbo"
     }
 
     console.log("Environment check:", envCheck)
 
-    if (!apiKey) {
-      throw new Error("OpenAI API key is not configured")
-    }
-
     const response = await openai.chat.completions.create({
-      model: process.env.AI_MODEL || "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -45,8 +31,8 @@ export async function GET() {
           content: "Say hello!"
         }
       ],
-      max_tokens: parseInt(process.env.MAX_TOKENS || "500"),
-      temperature: parseFloat(process.env.TEMPERATURE || "0.7")
+      max_tokens: 500,
+      temperature: 0.7
     })
 
     return NextResponse.json({
