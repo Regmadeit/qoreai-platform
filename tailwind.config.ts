@@ -52,19 +52,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // QoreAI Brand Colors
-        qore: {
-          blue: {
-            DEFAULT: "#0066CC",
-            light: "#3399FF",
-            dark: "#004C99",
-          },
-          gray: {
-            DEFAULT: "#666666",
-            light: "#999999",
-            dark: "#333333",
-          },
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -90,4 +77,4 @@ const config = {
   plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
-export default config 
+export default config

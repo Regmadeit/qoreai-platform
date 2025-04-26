@@ -2,12 +2,6 @@ import { NextResponse } from "next/server"
 import jwt from "jsonwebtoken"
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
-import { rateLimit } from '@/lib/rate-limit'
-
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500
-})
 
 // Mock user data with hashed passwords
 const users = [
@@ -39,28 +33,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
 
 export async function POST(request: Request) {
   try {
-    // Rate limiting
-    try {
-      await limiter.check(request, 10, 'CACHE_TOKEN') // 10 requests per minute
-    } catch {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-    }
-
-    // CSRF Protection - using headers instead of cookies for now
-    const csrfToken = request.headers.get("x-csrf-token")
-    if (!csrfToken) {
-      return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 })
-    }
-
-    // Check content type
-    const contentType = request.headers.get("content-type")
-    if (!contentType?.includes("application/json")) {
-      return NextResponse.json(
-        { error: "Content type must be application/json" },
-        { status: 415 }
-      )
-    }
-
     const body = await request.json()
 
     // Handle demo login
@@ -72,15 +44,8 @@ export async function POST(request: Request) {
         expiresIn: "1d"
       })
 
-      // Create response with cookie
-      const response = NextResponse.json({
-        user: userWithoutPassword,
-        token,
-        redirectTo: "/operator/dashboard"
-      })
-
-      // Set cookie in response
-      response.cookies.set('token', token, {
+      // Set cookie
+      cookies().set('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -88,13 +53,18 @@ export async function POST(request: Request) {
         path: '/'
       })
 
-      return response
+      return NextResponse.json({
+        success: true,
+        user: userWithoutPassword,
+        token,
+        redirectTo: "/operator/dashboard"
+      })
     }
 
     // Validate required fields
     if (!body.email || !body.password) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Missing credentials", details: "Email and password are required" },
         { status: 400 }
       )
     }
@@ -103,22 +73,22 @@ export async function POST(request: Request) {
     const user = users.find(u => u.email === body.email)
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: "Invalid credentials", details: "Email not found" },
         { status: 401 }
       )
     }
 
-    // Check password using bcrypt
+    // Verify password
     const isValidPassword = await bcrypt.compare(body.password, user.password)
     if (!isValidPassword) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: "Invalid credentials", details: "Incorrect password" },
         { status: 401 }
       )
     }
 
     // Generate JWT token
-    const { password, ...userWithoutPassword } = user
+    const { password: _, ...userWithoutPassword } = user
     const token = jwt.sign(userWithoutPassword, JWT_SECRET, {
       expiresIn: "1d"
     })
@@ -128,15 +98,8 @@ export async function POST(request: Request) {
     if (user.role === "manager") redirectTo = "/manager/dashboard"
     if (user.role === "admin") redirectTo = "/admin/dashboard"
 
-    // Create response with cookie
-    const response = NextResponse.json({
-      user: userWithoutPassword,
-      token,
-      redirectTo
-    })
-
-    // Set cookie in response
-    response.cookies.set('token', token, {
+    // Set cookie
+    cookies().set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -144,12 +107,17 @@ export async function POST(request: Request) {
       path: '/'
     })
 
-    return response
+    return NextResponse.json({
+      success: true,
+      user: userWithoutPassword,
+      token,
+      redirectTo
+    })
 
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: "An unexpected error occurred" },
       { status: 500 }
     )
   }

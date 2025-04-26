@@ -1,37 +1,19 @@
 import { LRUCache } from 'lru-cache'
 
-export interface RateLimitOptions {
-  interval: number
-  uniqueTokenPerInterval: number
-}
+const ratelimitCache = new LRUCache({
+  max: 500,
+  ttl: 60 * 1000 // 1 minute
+})
 
-export interface RateLimiter {
-  check: (request: Request, limit: number, token: string) => Promise<void>
-}
-
-export function rateLimit(options: RateLimitOptions): RateLimiter {
-  const tokenCache = new LRUCache({
-    max: options.uniqueTokenPerInterval || 500,
-    ttl: options.interval || 60000
-  })
-
-  return {
-    check: async (request: Request, limit: number, token: string) => {
-      const ip = request.headers.get('x-forwarded-for') || 'anonymous'
-      const tokenKey = `${ip}-${token}`
-      
-      const tokenCount = (tokenCache.get(tokenKey) as number[]) || [0]
-      if (tokenCount[0] === 0) {
-        tokenCache.set(tokenKey, [1])
-      } else {
-        tokenCount[0] += 1
-        tokenCache.set(tokenKey, tokenCount)
-      }
-
-      const currentUsage = tokenCount[0]
-      if (currentUsage > limit) {
-        throw new Error('Rate limit exceeded')
-      }
+class SimpleRateLimit {
+  async limit(key: string) {
+    const current = (ratelimitCache.get(key) as number) || 0
+    if (current >= 10) {
+      return { success: false }
     }
+    ratelimitCache.set(key, current + 1)
+    return { success: true }
   }
-} 
+}
+
+export const ratelimit = new SimpleRateLimit() 

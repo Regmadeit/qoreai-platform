@@ -93,13 +93,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4 py-12">
-      <Card className="w-full max-w-md bg-white/95 backdrop-blur">
+    <div className="flex min-h-screen items-center justify-center qore-gradient px-4 py-12">
+      <Card className="w-full max-w-md bg-card/95 backdrop-blur">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="relative h-16 w-16">
-              <div className="absolute inset-0 rounded-xl bg-blue-600 shadow-lg"></div>
-              <div className="absolute bottom-0 right-0 h-6 w-6 bg-yellow-500 transform rotate-45"></div>
+              <div className="absolute inset-0 rounded-xl bg-qore-blue shadow-lg"></div>
+              <div className="absolute bottom-0 right-0 h-6 w-6 bg-qore-gold transform rotate-45"></div>
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to QoreAI</CardTitle>
@@ -110,7 +110,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-destructive/90 text-destructive-foreground border-none">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -124,6 +124,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="qore-input"
               />
             </div>
             <div className="space-y-2">
@@ -135,12 +136,13 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                className="qore-input"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button 
-              className="w-full" 
+              className="w-full bg-qore-blue hover:bg-qore-blue/90 text-white" 
               type="submit" 
               disabled={isLoading}
             >
@@ -150,7 +152,7 @@ export default function LoginPage() {
             <Button 
               type="button"
               variant="secondary"
-              className="w-full"
+              className="w-full hover:bg-secondary/80"
               onClick={handleDemoLogin}
               disabled={isLoading}
             >
@@ -158,7 +160,7 @@ export default function LoginPage() {
               Try Demo Mode
             </Button>
             <div className="text-center text-sm">
-              <a href="/forgot-password" className="text-blue-600 hover:text-blue-500 hover:underline">
+              <a href="/forgot-password" className="text-primary hover:text-primary/90 hover:underline">
                 Forgot your password?
               </a>
             </div>
