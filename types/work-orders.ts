@@ -3,15 +3,30 @@ export interface WorkOrder {
   title: string
   description: string
   priority: "low" | "medium" | "high"
-  status: "open" | "in-progress" | "completed" | "cancelled"
-  assignee: string
-  createdBy: string
-  createdAt: string
-  dueDate: string
-  completedAt?: string
+  status: "open" | "in-progress" | "completed" | "cancelled" | "pending"
   equipmentId?: string
+  equipmentName?: string
+  assignedTo: string
+  assignedToName?: string
+  createdBy: string
+  createdByName?: string
+  createdAt: string
+  updatedAt: string
+  estimatedCompletionTime?: string
+  actualCompletionTime?: string | null
+  parts?: {
+    id: string
+    name: string
+    quantity: number
+  }[]
+  notes: {
+    id: string
+    text: string
+    createdBy: string
+    createdByName?: string
+    createdAt: string
+  }[]
   inventoryItems?: WorkOrderInventoryItem[]
-  notes?: WorkOrderNote[]
   attachments?: WorkOrderAttachment[]
 }
 
