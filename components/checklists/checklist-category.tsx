@@ -63,7 +63,9 @@ export function ChecklistCategory({ title, description, checklists }: ChecklistC
           </CardHeader>
           <CardContent>
             <ChecklistForm
-              checklistType={activeChecklist.id}
+              id={activeChecklist.id}
+              title={activeChecklist.title}
+              description={activeChecklist.description}
               items={activeChecklist.items}
               onComplete={() => setActiveChecklist(null)}
             />

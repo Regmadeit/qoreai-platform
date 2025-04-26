@@ -126,7 +126,10 @@ export function CommodityChecklist({ area, onComplete }: CommodityChecklistProps
             <CardTitle>{areaTitle} Commodity Quality Checklist</CardTitle>
             <CardDescription>Check and document the quality of each commodity type</CardDescription>
           </div>
-          <AiAssistantButton checklistType={area} className="ml-auto" />
+          <AiAssistantButton
+            contextType={area}
+            initialMessage={`Help me complete the ${area} checklist.`}
+          />
         </div>
       </CardHeader>
       <CardContent>

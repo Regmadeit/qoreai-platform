@@ -94,7 +94,7 @@ export function MobileBarcodeScanner({
 
     try {
       const track = streamRef.current.getVideoTracks()[0]
-      const capabilities = track.getCapabilities()
+      const capabilities = track.getCapabilities() as MediaTrackCapabilities & { torch?: boolean }
 
       // Check if torch is supported
       if (!capabilities.torch) {
@@ -106,14 +106,17 @@ export function MobileBarcodeScanner({
         return
       }
 
-      const newTorchState = !torchActive
-      await track.applyConstraints({ advanced: [{ torch: newTorchState }] })
-      setTorchActive(newTorchState)
+      // Toggle torch
+      const torchEnabled = !torchActive
+      await track.applyConstraints({
+        advanced: [{ torch: torchEnabled } as unknown as MediaTrackConstraintSet]
+      })
+      setTorchActive(torchEnabled)
     } catch (error) {
       console.error("Error toggling torch:", error)
       toast({
         title: "Torch Error",
-        description: "Could not toggle the torch.",
+        description: "Failed to toggle the torch.",
         variant: "destructive",
       })
     }
