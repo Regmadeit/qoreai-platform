@@ -10,13 +10,13 @@ interface Props {
 
 interface State {
   hasError: boolean
-  error: Error | null
+  error: Error | undefined
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null,
+    error: undefined,
   }
 
   public static getDerivedStateFromError(error: Error): State {
@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public resetErrorBoundary = () => {
-    this.setState({ hasError: false, error: null })
+    this.setState({ hasError: false, error: undefined })
   }
 
   public render() {
